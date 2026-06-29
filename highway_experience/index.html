@@ -49,13 +49,13 @@
         let score = 0, velocity = 0;
         let keys = {};
         let gameRunning = false;
-        const lanes = [-7, -3.5, 0, 3.5, 7]; // 5 lanes
+        const lanes = [-8, -4, 0, 4, 8]; // 5 proper highway lanes
 
         class AICar {
             constructor() {
                 const colors = [0x00ff88, 0xffffff, 0x4488ff, 0xff8800, 0xff4488, 0x88ff44];
                 this.mesh = new THREE.Mesh(
-                    new THREE.BoxGeometry(2.1, 1.35, 4.9),
+                    new THREE.BoxGeometry(2.2, 1.4, 5),
                     new THREE.MeshPhongMaterial({ color: colors[Math.floor(Math.random()*colors.length)] })
                 );
                 this.currentLane = Math.floor(Math.random() * lanes.length);
@@ -64,82 +64,86 @@
             }
             reset() {
                 this.mesh.position.x = lanes[this.currentLane];
-                this.mesh.position.z = -60 - Math.random() * 120;
-                this.speed = 0.65 + Math.random() * 1.15;
+                this.mesh.position.z = -80 - Math.random() * 140;
+                this.speed = 0.7 + Math.random() * 1.2;
             }
             update() {
-                this.mesh.position.z += this.speed + velocity * 0.8;
-                
-                // Occasional lane change
-                if (Math.random() < 0.008) {
+                this.mesh.position.z += this.speed + velocity * 0.75;
+                if (Math.random() < 0.007) {
                     const dir = Math.random() < 0.5 ? -1 : 1;
-                    const newLane = this.currentLane + dir;
-                    if (newLane >= 0 && newLane < lanes.length) {
-                        this.currentLane = newLane;
-                        this.mesh.position.x = lanes[this.currentLane];
-                    }
+                    const newLane = Math.max(0, Math.min(lanes.length-1, this.currentLane + dir));
+                    this.currentLane = newLane;
+                    this.mesh.position.x = lanes[this.currentLane];
                 }
-                
                 if (this.mesh.position.z > 50) this.reset();
             }
         }
 
         function init3D() {
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 400);
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 500);
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('container').appendChild(renderer.domElement);
 
-            scene.fog = new THREE.Fog(0x0a0f1f, 50, 220);
-            scene.add(new THREE.AmbientLight(0x445566));
+            scene.fog = new THREE.Fog(0x0a0f20, 80, 280);
+            scene.add(new THREE.AmbientLight(0x445577));
 
-            const sun = new THREE.DirectionalLight(0xffeecc, 1.4);
-            sun.position.set(15, 45, 30);
+            const sun = new THREE.DirectionalLight(0xffeecc, 1.5);
+            sun.position.set(20, 60, 40);
             scene.add(sun);
 
-            // Wide Highway Road
+            // Main Highway Road
             road = new THREE.Mesh(
-                new THREE.PlaneGeometry(32, 800),
-                new THREE.MeshLambertMaterial({ color: 0x1c2533 })
+                new THREE.PlaneGeometry(36, 1000),
+                new THREE.MeshLambertMaterial({ color: 0x1f2a3a })
             );
             road.rotation.x = -Math.PI / 2;
             road.position.y = -1;
             scene.add(road);
 
-            // Road shoulders
-            const shoulderL = new THREE.Mesh(
-                new THREE.PlaneGeometry(4, 800),
-                new THREE.MeshLambertMaterial({ color: 0x222222 })
-            );
-            shoulderL.rotation.x = -Math.PI / 2;
-            shoulderL.position.set(-18, -0.9, 0);
-            scene.add(shoulderL);
+            // Shoulders / Rumble strips
+            const shoulderMat = new THREE.MeshLambertMaterial({ color: 0x2a2a2a });
+            const leftShoulder = new THREE.Mesh(new THREE.PlaneGeometry(5, 1000), shoulderMat);
+            leftShoulder.rotation.x = -Math.PI / 2;
+            leftShoulder.position.set(-20.5, -0.9, 0);
+            scene.add(leftShoulder);
 
-            const shoulderR = shoulderL.clone();
-            shoulderR.position.x = 18;
-            scene.add(shoulderR);
+            const rightShoulder = leftShoulder.clone();
+            rightShoulder.position.x = 20.5;
+            scene.add(rightShoulder);
+
+            // Lane markings (dashed lines)
+            for (let i = 0; i < 40; i++) {
+                const line = new THREE.Mesh(
+                    new THREE.PlaneGeometry(0.35, 9),
+                    new THREE.MeshBasicMaterial({ color: 0xffff99 })
+                );
+                line.rotation.x = -Math.PI / 2;
+                line.position.y = 0.05;
+                scene.add(line);
+            }
 
             // Player Car (Pink Porsche style)
             playerCar = new THREE.Mesh(
-                new THREE.BoxGeometry(2.4, 1.4, 5.3),
-                new THREE.MeshPhongMaterial({ color: 0xff69b4, shininess: 90 })
+                new THREE.BoxGeometry(2.45, 1.45, 5.4),
+                new THREE.MeshPhongMaterial({ color: 0xff69b4, shininess: 95 })
             );
-            playerCar.position.set(0, 1.1, 12);
+            playerCar.position.set(0, 1.2, 12);
             scene.add(playerCar);
 
-            // Spoiler
+            // Rear spoiler
             const spoiler = new THREE.Mesh(
-                new THREE.BoxGeometry(2.8, 0.25, 1),
+                new THREE.BoxGeometry(2.9, 0.3, 1.1),
                 new THREE.MeshPhongMaterial({ color: 0x111111 })
             );
-            spoiler.position.set(0, 2.2, -1.6);
+            spoiler.position.set(0, 2.3, -1.8);
             playerCar.add(spoiler);
 
-            camera.position.set(0, 13, 26);
+            camera.position.set(0, 14, 27);
 
-            // Generate AI Traffic on proper lanes
-            for (let i = 0; i < 10; i++) {
+            // AI Traffic
+            for (let i = 0; i < 11; i++) {
                 aiCars.push(new AICar());
             }
 
@@ -154,26 +158,25 @@
             if (!gameRunning) return;
             requestAnimationFrame(gameLoop);
 
-            // Controls
-            if (keys['ArrowLeft'] || keys['a']) playerCar.position.x -= 0.42;
-            if (keys['ArrowRight'] || keys['d']) playerCar.position.x += 0.42;
-            if (keys['ArrowUp'] || keys['w']) velocity = Math.min(velocity + 0.2, 3.6);
-            if (keys['ArrowDown'] || keys[' ']) velocity = Math.max(velocity - 0.35, 0);
+            if (keys['ArrowLeft'] || keys['a']) playerCar.position.x -= 0.43;
+            if (keys['ArrowRight'] || keys['d']) playerCar.position.x += 0.43;
+            if (keys['ArrowUp'] || keys['w']) velocity = Math.min(velocity + 0.21, 3.8);
+            if (keys['ArrowDown'] || keys[' ']) velocity = Math.max(velocity - 0.36, 0);
 
-            velocity *= 0.952;
-            playerCar.position.x = Math.max(-9.5, Math.min(9.5, playerCar.position.x));
+            velocity *= 0.95;
+            playerCar.position.x = Math.max(-10, Math.min(10, playerCar.position.x));
 
-            road.position.z += velocity * 4.2;
-            if (road.position.z > 200) road.position.z = -200;
+            road.position.z += velocity * 4.5;
+            if (road.position.z > 250) road.position.z = -250;
 
-            camera.position.z = playerCar.position.z + 13;
-            camera.lookAt(playerCar.position.x * 0.6, 5.5, playerCar.position.z - 20);
+            camera.position.z = playerCar.position.z + 13.5;
+            camera.lookAt(playerCar.position.x * 0.6, 6, playerCar.position.z - 22);
 
             aiCars.forEach(car => car.update());
 
             score += Math.floor(velocity * 18);
             document.getElementById('score').textContent = score.toLocaleString();
-            document.getElementById('speed').textContent = Math.floor(velocity * 115);
+            document.getElementById('speed').textContent = Math.floor(velocity * 118);
 
             renderer.render(scene, camera);
         }
