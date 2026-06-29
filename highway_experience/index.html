@@ -11,7 +11,7 @@
         canvas { display:block; }
         .hud {
             position: absolute; top: 20px; left: 20px; font-family: 'Orbitron', sans-serif;
-            background: rgba(0,0,0,0.7); padding: 15px 20px; border-radius: 10px; z-index: 30; color: #fff;
+            background: rgba(0,0,0,0.6); padding: 15px 20px; border-radius: 10px; z-index: 30; color: #fff;
         }
         .score { font-size: 2.1rem; color: #00f3ff; }
         .start-screen {
@@ -33,7 +33,7 @@
     </div>
 
     <div class="start-screen" id="start-screen">
-        <h1 style="font-size:3.8rem; margin-bottom:10px; text-shadow:0 0 30px #00f3ff;">HIGHWAY VELOCITY</h1>
+        <h1 style="font-size:3.6rem; margin-bottom:10px; text-shadow:0 0 30px #00f3ff;">HIGHWAY VELOCITY</h1>
         <p style="margin-bottom:30px; font-size:1.1rem;">Developed by Anthony F</p>
         <button onclick="startGame()" style="padding:20px 60px; font-size:1.4rem; background:#00f3ff; color:#000; border:none; border-radius:50px; cursor:pointer; font-weight:900;">START DRIVING</button>
     </div>
@@ -52,61 +52,66 @@
 
         class AICar {
             constructor() {
-                const colors = [0xff3333, 0x33ff33, 0xffff33, 0x33ffff, 0xff33ff, 0x8888ff];
+                const colors = [0x00ff88, 0xffffff, 0x4444ff, 0xff8800, 0x88ff00];
                 this.mesh = new THREE.Mesh(
-                    new THREE.BoxGeometry(2.1, 1.4, 4.8),
-                    new THREE.MeshPhongMaterial({ color: colors[Math.floor(Math.random()*colors.length)] })
+                    new THREE.BoxGeometry(2.2, 1.3, 4.9),
+                    new THREE.MeshPhongMaterial({ color: colors[Math.floor(Math.random()*colors.length)], shininess: 30 })
                 );
                 this.reset();
                 scene.add(this.mesh);
             }
             reset() {
-                this.mesh.position.set(
-                    (Math.random() - 0.5) * 13,
-                    0.9,
-                    -60 - Math.random() * 80   // Much better spacing
-                );
-                this.speed = 0.5 + Math.random() * 1.1;
+                this.mesh.position.set((Math.random()-0.5)*13, 0.9, -80 - Math.random()*100);
+                this.speed = 0.7 + Math.random() * 1.1;
             }
             update() {
-                this.mesh.position.z += this.speed + velocity * 0.7;
-                if (this.mesh.position.z > 35) this.reset();
+                this.mesh.position.z += this.speed + velocity * 0.8;
+                if (this.mesh.position.z > 45) this.reset();
             }
         }
 
         function init3D() {
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(68, window.innerWidth/window.innerHeight, 0.1, 300);
+            camera = new THREE.PerspectiveCamera(72, window.innerWidth/window.innerHeight, 0.1, 400);
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('container').appendChild(renderer.domElement);
 
-            scene.fog = new THREE.Fog(0x0a0a15, 50, 160);
+            scene.fog = new THREE.Fog(0x112233, 60, 220);
 
-            scene.add(new THREE.AmbientLight(0x445577));
-            const sun = new THREE.DirectionalLight(0xffffff, 1.2);
-            sun.position.set(8, 35, 25);
+            scene.add(new THREE.AmbientLight(0x556677));
+            const sun = new THREE.DirectionalLight(0xffddaa, 1.4);
+            sun.position.set(20, 50, 30);
             scene.add(sun);
 
+            // Road
             road = new THREE.Mesh(
-                new THREE.PlaneGeometry(22, 400),
-                new THREE.MeshLambertMaterial({ color: 0x111122 })
+                new THREE.PlaneGeometry(24, 600),
+                new THREE.MeshLambertMaterial({ color: 0x222233 })
             );
             road.rotation.x = -Math.PI / 2;
             road.position.y = -1;
             scene.add(road);
 
+            // Player Car - More Porsche-like
             playerCar = new THREE.Mesh(
-                new THREE.BoxGeometry(2.3, 1.4, 5),
-                new THREE.MeshPhongMaterial({ color: 0xff2222 })
+                new THREE.BoxGeometry(2.4, 1.35, 5.2),
+                new THREE.MeshPhongMaterial({ color: 0xff66cc, shininess: 90 })  // Pink-ish
             );
-            playerCar.position.set(0, 1, 12);
+            playerCar.position.set(0, 1.1, 12);
             scene.add(playerCar);
 
-            camera.position.set(0, 13, 25);
+            // Spoiler
+            const spoiler = new THREE.Mesh(
+                new THREE.BoxGeometry(2.6, 0.2, 0.8),
+                new THREE.MeshPhongMaterial({ color: 0x111111 })
+            );
+            spoiler.position.set(0, 2.1, -1.8);
+            playerCar.add(spoiler);
 
-            // Only 8 AI cars with good spacing
-            for (let i = 0; i < 8; i++) {
+            camera.position.set(0, 12, 24);
+
+            for (let i = 0; i < 9; i++) {
                 aiCars.push(new AICar());
             }
 
@@ -121,25 +126,25 @@
             if (!gameRunning) return;
             requestAnimationFrame(gameLoop);
 
-            if (keys['ArrowLeft'] || keys['a']) playerCar.position.x -= 0.42;
-            if (keys['ArrowRight'] || keys['d']) playerCar.position.x += 0.42;
-            if (keys['ArrowUp'] || keys['w']) velocity = Math.min(velocity + 0.18, 3.0);
+            if (keys['ArrowLeft'] || keys['a']) playerCar.position.x -= 0.4;
+            if (keys['ArrowRight'] || keys['d']) playerCar.position.x += 0.4;
+            if (keys['ArrowUp'] || keys['w']) velocity = Math.min(velocity + 0.19, 3.4);
             if (keys['ArrowDown'] || keys[' ']) velocity = Math.max(velocity - 0.35, 0);
 
             velocity *= 0.955;
-            playerCar.position.x = Math.max(-9, Math.min(9, playerCar.position.x));
+            playerCar.position.x = Math.max(-9.5, Math.min(9.5, playerCar.position.x));
 
-            road.position.z += velocity * 3.5;
-            if (road.position.z > 100) road.position.z = -100;
+            road.position.z += velocity * 4;
+            if (road.position.z > 150) road.position.z = -150;
 
             camera.position.z = playerCar.position.z + 13;
-            camera.lookAt(playerCar.position.x * 0.5, 4, playerCar.position.z - 12);
+            camera.lookAt(playerCar.position.x * 0.7, 5, playerCar.position.z - 18);
 
             aiCars.forEach(car => car.update());
 
-            score += Math.floor(velocity * 14);
+            score += Math.floor(velocity * 16);
             document.getElementById('score').textContent = score.toLocaleString();
-            document.getElementById('speed').textContent = Math.floor(velocity * 98);
+            document.getElementById('speed').textContent = Math.floor(velocity * 110);
 
             renderer.render(scene, camera);
         }
