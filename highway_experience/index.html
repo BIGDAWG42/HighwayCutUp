@@ -4,19 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Highway Velocity | Premium Driving Experience</title>
-    <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
     <meta name="author" content="Anthony F">
+    <style>
+        :root {
+            --primary-dark: #0a0a15;
+            --secondary-dark: #121220;
+            --accent-blue: #00f3ff;
+            --accent-purple: #9d00ff;
+            --accent-pink: #ff00c8;
+            --text-light: #ffffff;
+            --text-gray: #b0b0c0;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background-color: var(--primary-dark);
+            color: var(--text-light);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        /* Hero with Canvas */
+        .hero {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        #traffic-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 800px;
+            padding: 20px;
+        }
+        .hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--accent-blue), 0 0 20px var(--accent-purple);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 10px var(--accent-blue), 0 0 20px var(--accent-purple); }
+            to { text-shadow: 0 0 15px var(--accent-blue), 0 0 30px var(--accent-purple), 0 0 45px var(--accent-pink); }
+        }
+        .hero-subtitle { font-size: 1.2rem; margin-bottom: 40px; color: var(--text-gray); }
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .btn-primary, .btn-secondary {
+            padding: 15px 40px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            box-shadow: 0 0 15px var(--accent-blue);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent-blue);
+            border: 2px solid var(--accent-blue);
+        }
+        .live-count {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--accent-blue);
+            font-family: 'Orbitron', sans-serif;
+        }
+        .live-indicator {
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* Other sections */
+        .section { padding: 100px 0; }
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .feature-cards, .scoring-grid, .leaderboard-container, .vehicles-grid, .features-grid, .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        .feature-card, .scoring-item, .leaderboard-card, .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+        }
+        .stat-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--accent-blue);
+        }
+        .footer {
+            background: var(--secondary-dark);
+            padding: 60px 0 30px;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.5rem; }
+            .hero-buttons { flex-direction: column; align-items: center; }
+        }
+    </style>
 </head>
 <body>
+
     <!-- Hero Section with Traffic AI -->
     <section class="hero">
-        <div class="hero-background">
-            <canvas id="traffic-canvas" width="1200" height="800"></canvas>
-            <div class="road"></div>
-            <div class="road-lines"></div>
-            <div class="sky"></div>
-        </div>
+        <canvas id="traffic-canvas" width="1200" height="800"></canvas>
         <div class="hero-content">
             <h1 class="hero-title">The Ultimate Highway Driving Experience</h1>
             <p class="hero-subtitle">Drive through dense highway traffic at extreme speeds, chain together clean overtakes, maintain your flow, and compete for the highest score. Precision, consistency, and skill separate the best drivers from the rest.</p>
@@ -31,24 +168,79 @@
         </div>
     </section>
 
-    <!-- Rest of your sections (What is..., Scoring, Leaderboards, etc.) remain the same -->
-    <!-- ... paste the rest from previous version ... -->
+    <!-- Add your other sections here if you want (scoring, leaderboard, etc.) -->
+    <!-- For now it's minimal to make deployment easy -->
 
     <footer class="footer">
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <h3>Highway Velocity</h3>
-                    <p>Premium Highway Driving Experience • Developed by Anthony F</p>
-                </div>
-                <!-- ... -->
-            </div>
-            <div class="footer-bottom">
-                <p>© 2023 Highway Velocity. All rights reserved. • Developed by Anthony F</p>
-            </div>
+            <p>© 2023 Highway Velocity. All rights reserved. • Developed by Anthony F</p>
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script>
+        // Dynamic Traffic AI
+        const canvas = document.getElementById('traffic-canvas');
+        const ctx = canvas.getContext('2d');
+        let cars = [];
+        const lanes = [200, 350, 500, 650, 800];
+
+        class Car {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = lanes[Math.floor(Math.random() * lanes.length)];
+                this.y = Math.random() * -800 - 100;
+                this.speed = 3 + Math.random() * 5;
+                this.width = 40;
+                this.height = 80;
+                this.color = ['#ff0000', '#00ff00', '#ffff00', '#00ffff', '#ff00ff'][Math.floor(Math.random()*5)];
+                this.laneChangeCooldown = 0;
+            }
+            update() {
+                this.y += this.speed;
+                this.laneChangeCooldown--;
+                if (this.laneChangeCooldown <= 0 && Math.random() < 0.025) {
+                    const idx = lanes.indexOf(this.x);
+                    if (idx > 0 && Math.random() < 0.5) this.x = lanes[idx - 1];
+                    else if (idx < lanes.length - 1) this.x = lanes[idx + 1];
+                    this.laneChangeCooldown = 50;
+                }
+                if (this.y > canvas.height + 100) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x - this.width/2, this.y, this.width, this.height);
+                ctx.fillStyle = '#ffff88';
+                ctx.fillRect(this.x - this.width/2 + 5, this.y + 10, 8, 15);
+                ctx.fillRect(this.x + this.width/2 - 13, this.y + 10, 8, 15);
+            }
+        }
+
+        function initTraffic() {
+            cars = [];
+            for (let i = 0; i < 20; i++) {
+                const car = new Car();
+                car.y = Math.random() * canvas.height;
+                cars.push(car);
+            }
+        }
+
+        function animateTraffic() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(20, 20, 40, 0.7)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            cars.forEach(car => {
+                car.update();
+                car.draw();
+            });
+            requestAnimationFrame(animateTraffic);
+        }
+
+        // Start everything
+        window.onload = () => {
+            initTraffic();
+            animateTraffic();
+        };
+    </script>
 </body>
 </html>
