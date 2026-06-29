@@ -52,13 +52,10 @@
 
         class AICar {
             constructor() {
-                const colors = [0xff0000, 0x00ff00, 0xffff00, 0x00ffff, 0xff00ff, 0x8888ff];
+                const colors = [0xff3333, 0x33ff33, 0xffff33, 0x33ffff, 0xff33ff, 0x8888ff];
                 this.mesh = new THREE.Mesh(
-                    new THREE.BoxGeometry(2.1, 1.4, 4.5),
-                    new THREE.MeshPhongMaterial({ 
-                        color: colors[Math.floor(Math.random() * colors.length)],
-                        shininess: 20
-                    })
+                    new THREE.BoxGeometry(2.1, 1.4, 4.8),
+                    new THREE.MeshPhongMaterial({ color: colors[Math.floor(Math.random()*colors.length)] })
                 );
                 this.reset();
                 scene.add(this.mesh);
@@ -67,13 +64,13 @@
                 this.mesh.position.set(
                     (Math.random() - 0.5) * 13,
                     0.9,
-                    -40 - Math.random() * 60
+                    -60 - Math.random() * 80   // Much better spacing
                 );
-                this.speed = 0.6 + Math.random() * 1.4;
+                this.speed = 0.5 + Math.random() * 1.1;
             }
             update() {
-                this.mesh.position.z += this.speed + velocity * 0.8;
-                if (this.mesh.position.z > 40) this.reset();
+                this.mesh.position.z += this.speed + velocity * 0.7;
+                if (this.mesh.position.z > 35) this.reset();
             }
         }
 
@@ -84,14 +81,13 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('container').appendChild(renderer.domElement);
 
-            scene.fog = new THREE.Fog(0x0a0a15, 60, 180);
+            scene.fog = new THREE.Fog(0x0a0a15, 50, 160);
 
-            scene.add(new THREE.AmbientLight(0x445566));
-            const sun = new THREE.DirectionalLight(0xffffff, 1.1);
-            sun.position.set(10, 40, 30);
+            scene.add(new THREE.AmbientLight(0x445577));
+            const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+            sun.position.set(8, 35, 25);
             scene.add(sun);
 
-            // Road
             road = new THREE.Mesh(
                 new THREE.PlaneGeometry(22, 400),
                 new THREE.MeshLambertMaterial({ color: 0x111122 })
@@ -100,19 +96,17 @@
             road.position.y = -1;
             scene.add(road);
 
-            // Player Car (Red)
             playerCar = new THREE.Mesh(
                 new THREE.BoxGeometry(2.3, 1.4, 5),
-                new THREE.MeshPhongMaterial({ color: 0xff2222, shininess: 60 })
+                new THREE.MeshPhongMaterial({ color: 0xff2222 })
             );
             playerCar.position.set(0, 1, 12);
             scene.add(playerCar);
 
             camera.position.set(0, 13, 25);
-            camera.lookAt(0, 3, 0);
 
-            // Spawn AI Traffic
-            for (let i = 0; i < 15; i++) {
+            // Only 8 AI cars with good spacing
+            for (let i = 0; i < 8; i++) {
                 aiCars.push(new AICar());
             }
 
@@ -127,27 +121,22 @@
             if (!gameRunning) return;
             requestAnimationFrame(gameLoop);
 
-            // Player Controls
             if (keys['ArrowLeft'] || keys['a']) playerCar.position.x -= 0.42;
             if (keys['ArrowRight'] || keys['d']) playerCar.position.x += 0.42;
             if (keys['ArrowUp'] || keys['w']) velocity = Math.min(velocity + 0.18, 3.0);
             if (keys['ArrowDown'] || keys[' ']) velocity = Math.max(velocity - 0.35, 0);
 
             velocity *= 0.955;
-
             playerCar.position.x = Math.max(-9, Math.min(9, playerCar.position.x));
 
-            // Road & Camera
             road.position.z += velocity * 3.5;
             if (road.position.z > 100) road.position.z = -100;
 
             camera.position.z = playerCar.position.z + 13;
-            camera.lookAt(playerCar.position.x * 0.6, 4, playerCar.position.z - 10);
+            camera.lookAt(playerCar.position.x * 0.5, 4, playerCar.position.z - 12);
 
-            // Update AI Cars
             aiCars.forEach(car => car.update());
 
-            // Scoring
             score += Math.floor(velocity * 14);
             document.getElementById('score').textContent = score.toLocaleString();
             document.getElementById('speed').textContent = Math.floor(velocity * 98);
